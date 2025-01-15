@@ -13,37 +13,25 @@ const StorageService = {
 
   saveInvoice: (invoiceData) => {
     try {
-      console.log('Raw invoice data:', invoiceData);
-
-      const processedItems = invoiceData.invoiceItems.map(item => ({
-        description: String(item.description || ''),
-        quantity: Number(item.quantity) || 0,
-        amount: Number(item.amount) || 0,
-      }));
-
-      console.log('Processed items:', processedItems);
-
       const invoices = StorageService.getInvoices();
       const index = invoices.findIndex(inv => inv.id === invoiceData.id);
-      const timestamp = new Date().toISOString();
-
+      
       const processedData = {
-        id: invoiceData.id,
-        clientName: invoiceData.clientName || '',
-        clientAddress: invoiceData.clientAddress || '',
-        invoiceDate: invoiceData.invoiceDate || timestamp.split('T')[0],
-        dueDate: invoiceData.dueDate || '',
-        invoiceItems: processedItems,
+        ...invoiceData,
+        id: invoiceData.id || `INV-${Date.now()}`,
+        invoiceItems: invoiceData.invoiceItems.map(item => ({
+          description: String(item.description || ''),
+          quantity: Number(item.quantity) || 0,
+          amount: Number(item.amount) || 0,
+        })),
+        total: Number(invoiceData.total) || 0,
+        subtotal: Number(invoiceData.subtotal) || 0,
+        gst: Number(invoiceData.gst) || 0,
+        discount: Number(invoiceData.discount) || 0,
         gstRate: Number(invoiceData.gstRate) || 0,
         discountRate: Number(invoiceData.discountRate) || 0,
-        status: invoiceData.status || 'draft',
-        template: invoiceData.template || 'professional',
-        color: invoiceData.color || 'blue',
-        bankDetails: invoiceData.bankDetails || invoiceTemplates.professional.bankDetails,
-        terms: invoiceData.terms || invoiceTemplates.professional.terms,
-        total: invoiceData.total || 0,
-        updatedAt: timestamp,
-        createdAt: index === -1 ? timestamp : invoices[index].createdAt,
+        createdAt: invoiceData.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
 
       if (index !== -1) {
@@ -53,7 +41,6 @@ const StorageService = {
       }
 
       localStorage.setItem('invoices', JSON.stringify(invoices));
-      console.log('Saved invoice:', processedData);
       return true;
     } catch (error) {
       console.error('Error saving invoice:', error);
@@ -75,9 +62,11 @@ const StorageService = {
 
   getNextInvoiceNumber: () => {
     const invoices = StorageService.getInvoices();
-    const year = new Date().getFullYear();
-    const number = 1001 + invoices.length;
-    return `INV-${year}-${String(number).padStart(4, '0')}`;
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const number = invoices.length + 1;
+    return `INV-${year}${month}-${String(number).padStart(3, '0')}`;
   },
 };
 

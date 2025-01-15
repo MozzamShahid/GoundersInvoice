@@ -71,7 +71,7 @@ button:focus-visible {
 
 @media print {
   @page {
-    margin: 1.5cm;
+    margin: 1cm;
     size: A4;
   }
 
@@ -180,6 +180,36 @@ button:focus-visible {
   /* Adjust invoice layout for print */
   .invoice-content {
     padding: 0 !important;
+  }
+
+  /* Ensure text is black in print */
+  .text-gray-600 {
+    color: #4B5563 !important;
+  }
+
+  /* Ensure borders print properly */
+  .border-gray-300 {
+    border-color: #D1D5DB !important;
+  }
+
+  /* Compact spacing for print */
+  .mb-8 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .py-2 {
+    padding-top: 0.375rem !important;
+    padding-bottom: 0.375rem !important;
+  }
+
+  /* Ensure table fits on one page */
+  table {
+    page-break-inside: avoid;
+  }
+
+  /* Prevent page breaks inside critical sections */
+  tr, .grid {
+    page-break-inside: avoid;
   }
 }
 

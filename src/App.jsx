@@ -9,25 +9,16 @@ function App() {
   return (
     <Router>
       <div className="min-h-screen flex flex-col">
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route
-            path="/*"
-            element={
-              <>
-                <Header className="print:hidden" />
-                <main className="flex-grow">
-                  <Routes>
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/invoice/new" element={<Invoice />} />
-                    <Route path="/invoice/:id" element={<Invoice />} />
-                  </Routes>
-                </main>
-                <Footer className="print:hidden" />
-              </>
-            }
-          />
-        </Routes>
+        <Header className="print:hidden" />
+        <main className="flex-grow">
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/invoice/new" element={<Invoice />} />
+            <Route path="/invoice/:id" element={<Invoice />} />
+          </Routes>
+        </main>
+        <Footer className="print:hidden" />
       </div>
     </Router>
   );
