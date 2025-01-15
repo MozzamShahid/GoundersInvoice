@@ -68,3 +68,121 @@ button:focus-visible {
     @apply bg-transparent border-transparent hover:outline-none active:outline-none
   }
 }
+
+@media print {
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  @page :first {
+    margin-top: 0;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+    background: white !important;
+    color: black !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  input, textarea {
+    border: none !important;
+    padding: 0 !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    background: transparent !important;
+  }
+
+  button {
+    display: none !important;
+  }
+
+  @page {
+    margin-bottom: 0;
+  }
+
+  html {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Hide calendar icons */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
+
+  /* Reduce column gaps in print */
+  .print\:gap-2 {
+    gap: 0.5rem !important;
+  }
+  
+  .print\:gap-4 {
+    gap: 1rem !important;
+  }
+
+  /* Ensure clean date display */
+  input[type="date"] {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+  }
+
+  /* Adjust spacing for print */
+  .grid {
+    row-gap: 0.5rem !important;
+  }
+
+  /* Remove unnecessary margins */
+  .space-y-3 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem !important;
+  }
+
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.75rem !important;
+  }
+
+  /* Hide header and footer when printing */
+  header, footer {
+    display: none !important;
+  }
+
+  /* Hide back button and other non-invoice elements */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Only show the invoice content */
+  .invoice {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Remove background colors and shadows */
+  * {
+    background-color: white !important;
+    box-shadow: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  .invoice {
+    page-break-after: always;
+  }
+
+  /* Remove unnecessary spacing */
+  .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+}
+
+@layer components {
+  input, textarea {
+    @apply bg-transparent border-transparent hover:outline-none focus:outline-none;
+  }
+}
