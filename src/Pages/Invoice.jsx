@@ -40,7 +40,10 @@ const Invoice = () => {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: 'invoiceItems',
+    name: "invoiceItems",
+    defaultValues: {
+      invoiceItems: [{ description: '', quantity: 1, amount: 0 }]
+    }
   });
 
   const themeColors = {
@@ -161,23 +164,56 @@ const Invoice = () => {
   const { subtotal, gst, discount, total } = calculateTotals();
 
   return (
-    <section className={`invoice min-h-screen bg-white text-left ${getTemplateStyles()}`}>
-      <div className="w-full max-w-5xl mx-auto p-8 print:p-0">
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="mb-8 text-gray-600 hover:text-gray-800 print:hidden"
-        >
-          ← Back to Dashboard
-        </button>
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-5xl mx-auto p-8 print:p-0">
-          <div className="print:hidden mb-4 flex justify-end gap-4">
+    <section className="invoice min-h-screen bg-white">
+      {/* Top Bar */}
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 print:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <button
+              onClick={() => navigate('/')}
+              className="text-gray-600 hover:text-gray-900 flex items-center"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Back
+            </button>
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {/* Template and Color Selection */}
+          <div className="print:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-600 mr-2">Template:</label>
-              <select 
-                value={selectedTemplate}
+              <label className="block text-sm font-medium text-gray-700 mb-1">Template</label>
+              <select
+                {...register('template')}
                 onChange={(e) => handleTemplateChange(e.target.value)}
-                className="border-gray-200 rounded"
+                className="w-full border-gray-300 rounded-md shadow-sm"
               >
                 {Object.entries(invoiceTemplates).map(([key, template]) => (
                   <option key={key} value={key}>{template.name}</option>
@@ -185,104 +221,79 @@ const Invoice = () => {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-600 mr-2">Status:</label>
-              <select {...register('status')} className="border-gray-200 rounded">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                {...register('status')}
+                className="w-full border-gray-300 rounded-md shadow-sm"
+              >
                 <option value="draft">Draft</option>
                 <option value="pending">Pending</option>
                 <option value="paid">Paid</option>
               </select>
             </div>
+          </div>
+
+          {/* Client Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label className="text-sm font-medium text-gray-600 mr-2">Theme:</label>
-              <select {...register('color')} className="border-gray-200 rounded">
-                <option value="blue">Blue</option>
-                <option value="green">Green</option>
-                <option value="orange">Orange</option>
-              </select>
+              <label className="text-sm font-medium text-gray-600 block mb-1">Bill To:</label>
+              <input
+                {...register('clientName')}
+                type="text"
+                placeholder="Client Name"
+                className="text-2xl font-semibold w-full border-b-2 border-gray-200 focus:border-blue-500 pb-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-600 block mb-1">Client Address:</label>
+              <textarea
+                {...register('clientAddress')}
+                className="w-full border-b-2 border-gray-200 focus:border-blue-500 resize-none"
+                rows="2"
+                placeholder="Client's complete address"
+              ></textarea>
             </div>
           </div>
 
-          <div className="flex justify-between items-center mb-8 print:mb-12">
-            <div>
-              <h2 className={`text-4xl font-bold text-${selectedColor}-800`}>INVOICE</h2>
-              <p className="text-gray-500 mt-1">#INV-{new Date().getFullYear()}-{String(1001).padStart(4, '0')}</p>
-            </div>
-            <div className="print:hidden flex gap-4">
-              <button type="submit" className={`${themeColors[selectedColor]} text-white px-6 py-2 rounded-lg transition-colors`}>
-                Save
-              </button>
-              <button 
-                type="button" 
-                onClick={() => window.print()} 
-                className={`${themeColors[selectedColor]} text-white px-6 py-2 rounded-lg transition-colors`}
-              >
-                Print
-              </button>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12 mb-12 print:gap-4">
-            <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 print:gap-2">
               <div>
-                <label className="text-sm font-medium text-gray-600 block mb-1">Bill To:</label>
+                <label className="text-sm font-medium text-gray-600 block mb-1">Invoice Date:</label>
                 <input
-                  {...register('clientName')}
-                  type="text"
-                  placeholder="Client Name"
-                  className="text-2xl font-semibold w-full border-b-2 border-gray-200 focus:border-blue-500 pb-1"
+                  {...register('invoiceDate')}
+                  type="date"
+                  className="w-full border-b-2 border-gray-200 focus:border-blue-500 print:appearance-none"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600 block mb-1">Client Address:</label>
-                <textarea
-                  {...register('clientAddress')}
-                  className="w-full border-b-2 border-gray-200 focus:border-blue-500 resize-none"
-                  rows="2"
-                  placeholder="Client's complete address"
-                ></textarea>
+                <label className="text-sm font-medium text-gray-600 block mb-1">Due Date:</label>
+                <input
+                  {...register('dueDate')}
+                  type="date"
+                  className="w-full border-b-2 border-gray-200 focus:border-blue-500 print:appearance-none"
+                />
               </div>
             </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 print:gap-2">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">Invoice Date:</label>
-                  <input
-                    {...register('invoiceDate')}
-                    type="date"
-                    className="w-full border-b-2 border-gray-200 focus:border-blue-500 print:appearance-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">Due Date:</label>
-                  <input
-                    {...register('dueDate')}
-                    type="date"
-                    className="w-full border-b-2 border-gray-200 focus:border-blue-500 print:appearance-none"
-                  />
-                </div>
+            <div className="grid grid-cols-2 gap-4 print:gap-2">
+              <div>
+                <label className="text-sm font-medium text-gray-600 block mb-1">GST Rate (%):</label>
+                <input
+                  type="number"
+                  {...register('gstRate')}
+                  className="w-full border-b-2 border-gray-200 focus:border-blue-500"
+                  min="0"
+                  max="100"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4 print:gap-2">
-                <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">GST Rate (%):</label>
-                  <input
-                    type="number"
-                    {...register('gstRate')}
-                    className="w-full border-b-2 border-gray-200 focus:border-blue-500"
-                    min="0"
-                    max="100"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600 block mb-1">Discount (%):</label>
-                  <input
-                    type="number"
-                    {...register('discountRate')}
-                    className="w-full border-b-2 border-gray-200 focus:border-blue-500"
-                    min="0"
-                    max="100"
-                  />
-                </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600 block mb-1">Discount (%):</label>
+                <input
+                  type="number"
+                  {...register('discountRate')}
+                  className="w-full border-b-2 border-gray-200 focus:border-blue-500"
+                  min="0"
+                  max="100"
+                />
               </div>
             </div>
           </div>
@@ -297,44 +308,43 @@ const Invoice = () => {
 
             <div className="divide-y divide-gray-200">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-12 gap-4 p-4 items-center">
-                  <div className="col-span-6">
+                <div key={field.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 p-4 items-center">
+                  <div className="sm:col-span-6">
+                    <label className="block text-sm text-gray-600 sm:hidden">Description</label>
                     <input
-                      {...register(`invoiceItems.${index}.description`, {
-                        required: true,
-                      })}
+                      {...register(`invoiceItems.${index}.description`)}
                       className="w-full border-b border-gray-200 focus:border-blue-500 py-1"
                       placeholder="Item description"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <input
-                      {...register(`invoiceItems.${index}.quantity`, {
-                        required: true,
-                        valueAsNumber: true,
-                        min: 1,
-                      })}
-                      defaultValue={1}
-                      type="number"
-                      min="1"
-                      className="w-full text-right border-b border-gray-200 focus:border-blue-500 py-1"
-                    />
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-4 sm:col-span-2">
+                    <div>
+                      <label className="block text-sm text-gray-600 sm:hidden">Quantity</label>
+                      <input
+                        {...register(`invoiceItems.${index}.quantity`, {
+                          valueAsNumber: true,
+                        })}
+                        type="number"
+                        className="w-full text-right border-b border-gray-200 focus:border-blue-500 py-1"
+                        min="1"
+                        defaultValue={1}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-600 sm:hidden">Amount</label>
+                      <input
+                        {...register(`invoiceItems.${index}.amount`, {
+                          valueAsNumber: true,
+                        })}
+                        type="number"
+                        className="w-full text-right border-b border-gray-200 focus:border-blue-500 py-1"
+                        min="0"
+                        step="0.01"
+                        defaultValue={0}
+                      />
+                    </div>
                   </div>
-                  <div className="col-span-2">
-                    <input
-                      {...register(`invoiceItems.${index}.amount`, {
-                        required: true,
-                        valueAsNumber: true,
-                        min: 0,
-                      })}
-                      defaultValue={0}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      className="w-full text-right border-b border-gray-200 focus:border-blue-500 py-1"
-                    />
-                  </div>
-                  <div className="col-span-2 print:hidden flex justify-end">
+                  <div className="sm:col-span-2 flex justify-end print:hidden">
                     <button
                       type="button"
                       onClick={() => remove(index)}

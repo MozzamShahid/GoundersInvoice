@@ -151,38 +151,104 @@ button:focus-visible {
     display: none !important;
   }
 
-  /* Hide back button and other non-invoice elements */
+  /* Hide back button */
+  .back-button {
+    display: none !important;
+  }
+
+  /* Ensure only invoice content is printed */
+  .invoice {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Remove any page margins */
+  @page {
+    margin: 1cm;
+  }
+
+  /* Ensure white background */
+  body {
+    background: white !important;
+  }
+
+  /* Hide all non-essential elements */
   .print\:hidden {
     display: none !important;
   }
 
-  /* Only show the invoice content */
-  .invoice {
+  /* Adjust invoice layout for print */
+  .invoice-content {
     padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* Remove background colors and shadows */
-  * {
-    background-color: white !important;
-    box-shadow: none !important;
-  }
-
-  /* Ensure proper page breaks */
-  .invoice {
-    page-break-after: always;
-  }
-
-  /* Remove unnecessary spacing */
-  .container {
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: none !important;
   }
 }
 
 @layer components {
   input, textarea {
     @apply bg-transparent border-transparent hover:outline-none focus:outline-none;
+  }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 640px) {
+  .invoice {
+    padding: 1rem !important;
+  }
+
+  input, select, textarea {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+
+  /* Improve touch targets */
+  button, 
+  [type='button'], 
+  [type='submit'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for mobile */
+  .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1rem !important;
+  }
+
+  /* Better button touch targets */
+  .btn, button, [type='button'], [type='submit'] {
+    @apply min-h-[44px] min-w-[44px] px-4;
+  }
+
+  /* Improved form spacing */
+  .form-group {
+    @apply mb-6;
+  }
+
+  /* Better input touch targets */
+  input, select, textarea {
+    @apply min-h-[44px] text-base;
+  }
+
+  /* Improved spacing */
+  .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    @apply my-6;
+  }
+
+  /* Better grid gaps */
+  .gap-4 {
+    @apply gap-y-4;
+  }
+
+  /* Improved padding */
+  .p-4 {
+    @apply py-4 px-3;
+  }
+
+  /* Better text sizes */
+  .text-sm {
+    @apply text-base;
+  }
+
+  /* Improved container padding */
+  .container {
+    @apply px-4;
   }
 }

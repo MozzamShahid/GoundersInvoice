@@ -21,18 +21,22 @@ const Landing = () => {
                 The easiest way to generate beautiful, professional invoices. 
                 Choose from multiple templates, customize your design, and manage your billing with ease.
               </p>
-              <div className="flex gap-6 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center">
                 <Link
                   to="/dashboard"
-                  className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl"
+                  className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 px-8 py-4 rounded-lg text-lg font-semibold transition-all shadow-lg hover:shadow-xl flex items-center justify-center"
                 >
-                  Get Started Free
+                  <span>Get Started Free</span>
+                  <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
                 </Link>
                 <Link
                   to="/invoice/new"
-                  className="bg-transparent hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors border-2 border-white"
+                  className="w-full sm:w-auto bg-transparent hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all border-2 border-white flex items-center justify-center"
                 >
-                  Create First Invoice
+                  <span>Create First Invoice</span>
+                  <span className="ml-2">📄</span>
                 </Link>
               </div>
             </div>
@@ -114,9 +118,12 @@ const Landing = () => {
             </p>
             <Link
               to="/invoice/new"
-              className="bg-white text-blue-600 hover:bg-blue-50 px-12 py-4 rounded-lg text-lg font-semibold transition-colors inline-block shadow-lg hover:shadow-xl"
+              className="w-full sm:w-auto bg-white text-blue-600 hover:bg-blue-50 px-12 py-4 rounded-lg text-lg font-semibold transition-all shadow-lg hover:shadow-xl inline-flex items-center justify-center"
             >
-              Create Your First Invoice
+              <span>Create Your First Invoice</span>
+              <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
             </Link>
           </div>
         </div>

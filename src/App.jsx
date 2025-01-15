@@ -15,7 +15,7 @@ function App() {
             path="/*"
             element={
               <>
-                <Header />
+                <Header className="print:hidden" />
                 <main className="flex-grow">
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard />} />
@@ -23,7 +23,7 @@ function App() {
                     <Route path="/invoice/:id" element={<Invoice />} />
                   </Routes>
                 </main>
-                <Footer />
+                <Footer className="print:hidden" />
               </>
             }
           />

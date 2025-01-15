@@ -13,7 +13,16 @@ const StorageService = {
 
   saveInvoice: (invoiceData) => {
     try {
-      console.log('Saving invoice data:', invoiceData);
+      console.log('Raw invoice data:', invoiceData);
+
+      const processedItems = invoiceData.invoiceItems.map(item => ({
+        description: String(item.description || ''),
+        quantity: Number(item.quantity) || 0,
+        amount: Number(item.amount) || 0,
+      }));
+
+      console.log('Processed items:', processedItems);
+
       const invoices = StorageService.getInvoices();
       const index = invoices.findIndex(inv => inv.id === invoiceData.id);
       const timestamp = new Date().toISOString();
@@ -24,9 +33,9 @@ const StorageService = {
         clientAddress: invoiceData.clientAddress || '',
         invoiceDate: invoiceData.invoiceDate || timestamp.split('T')[0],
         dueDate: invoiceData.dueDate || '',
-        invoiceItems: invoiceData.invoiceItems || [],
-        gstRate: invoiceData.gstRate || 0,
-        discountRate: invoiceData.discountRate || 0,
+        invoiceItems: processedItems,
+        gstRate: Number(invoiceData.gstRate) || 0,
+        discountRate: Number(invoiceData.discountRate) || 0,
         status: invoiceData.status || 'draft',
         template: invoiceData.template || 'professional',
         color: invoiceData.color || 'blue',
@@ -44,7 +53,7 @@ const StorageService = {
       }
 
       localStorage.setItem('invoices', JSON.stringify(invoices));
-      console.log('Invoice saved successfully:', processedData);
+      console.log('Saved invoice:', processedData);
       return true;
     } catch (error) {
       console.error('Error saving invoice:', error);

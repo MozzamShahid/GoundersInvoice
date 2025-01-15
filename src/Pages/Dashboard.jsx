@@ -96,24 +96,24 @@ const Dashboard = () => {
         <div className="space-y-4">
           {sortedInvoices.map((invoice) => (
             <div key={invoice.id} className="block bg-white rounded-lg shadow hover:shadow-md transition-shadow">
-              <div className="p-6">
-                <div className="grid grid-cols-6 gap-4 items-center">
-                  <div className="col-span-2">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-6 gap-4 items-center">
+                  <div className="sm:col-span-2">
                     <h3 className="text-lg font-semibold text-gray-900">
                       {invoice.id}
                     </h3>
                     <p className="text-gray-500">{invoice.clientName || 'No Client Name'}</p>
                   </div>
-                  <div>
+                  <div className="flex justify-between sm:block">
                     <p className="text-gray-900">${invoice.total.toFixed(2)}</p>
                     <p className="text-gray-500">Due {new Date(invoice.dueDate).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(invoice.status)}`}>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm ${getStatusColor(invoice.status)}`}>
                       {invoice.status}
                     </span>
                   </div>
-                  <div className="col-span-2 text-right">
+                  <div className="sm:col-span-2 flex justify-end">
                     <Link
                       to={`/invoice/${invoice.id}`}
                       className="text-blue-600 hover:text-blue-800 mr-4"
