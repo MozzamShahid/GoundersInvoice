@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { invoiceTemplates } from '../data/invoiceTemplates';
 import StorageService from '../services/StorageService';
 import { motion } from 'framer-motion';
+import { loadProductsFromCSV } from '../utils/csvLoader';
 
 const Invoice = () => {
   const { id } = useParams();
@@ -14,7 +15,8 @@ const Invoice = () => {
   const { register, handleSubmit, control, watch, setValue, formState: { isDirty, isSubmitting } } = useForm({
     defaultValues: existingInvoice || {
       id: StorageService.getNextInvoiceNumber(),
-      invoiceItems: [{ description: '', quantity: 1, amount: 0 }],
+      invoiceItems: [{ description: '', quantity: 1, amount: 0, isCustomText: false }],
+      customItems: [],
       gstRate: 10,
       discountRate: 0,
       status: 'draft',
@@ -33,13 +35,22 @@ const Invoice = () => {
     name: "invoiceItems"
   });
 
+  // Separate field array for custom entries
+  const { fields: customFields, append: appendCustom, remove: removeCustom } = useFieldArray({
+    control,
+    name: "customItems"  // separate field for custom entries
+  });
+
   // Watch values for calculations
   const invoiceItems = watch('invoiceItems') || [];
   const gstRate = Number(watch('gstRate')) || 0;
   const discountRate = Number(watch('discountRate')) || 0;
 
   const calculateTotals = () => {
-    const subtotal = invoiceItems.reduce((sum, item) => {
+    const invoiceItems = watch('invoiceItems') || [];
+    const customItems = watch('customItems') || [];
+    
+    const subtotal = [...invoiceItems, ...customItems].reduce((sum, item) => {
       const quantity = Number(item.quantity) || 0;
       const amount = Number(item.amount) || 0;
       return sum + (quantity * amount);
@@ -53,6 +64,32 @@ const Invoice = () => {
   };
 
   const { subtotal, gst, discount, total } = calculateTotals();
+
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      const loadedProducts = await loadProductsFromCSV();
+      setProducts(loadedProducts);
+    };
+    loadProducts();
+  }, []);
+
+  // Add this function to handle product selection with better error handling
+  const handleProductSelect = (index, productData) => {
+    if (!productData) {
+      // If Text Only selected, just clear the fields for manual entry
+      setValue(`invoiceItems.${index}.description`, '');
+      setValue(`invoiceItems.${index}.quantity`, '');
+      setValue(`invoiceItems.${index}.amount`, '');
+      return;
+    }
+    
+    // If product selected, fill in the product details
+    setValue(`invoiceItems.${index}.description`, productData.title);
+    setValue(`invoiceItems.${index}.quantity`, productData.qty);
+    setValue(`invoiceItems.${index}.amount`, productData.variantPrice);
+  };
 
   const onSubmit = async (data) => {
     try {
@@ -137,7 +174,7 @@ const Invoice = () => {
                   Print
                 </button>
               </div>
-            </div>
+          </div>
           </div>
         </div>
 
@@ -229,6 +266,7 @@ const Invoice = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 font-medium">Product/Service</th>
                       <th className="text-left py-2 font-medium">Description</th>
                       <th className="text-right py-2 font-medium w-24">Quantity</th>
                       <th className="text-right py-2 font-medium w-32">Price</th>
@@ -238,29 +276,54 @@ const Invoice = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {fields.map((field, index) => {
-                      const quantity = watch(`invoiceItems.${index}.quantity`) || 0;
-                      const amount = watch(`invoiceItems.${index}.amount`) || 0;
+                      const quantity = Number(watch(`invoiceItems.${index}.quantity`) || 0);
+                      const amount = Number(watch(`invoiceItems.${index}.amount`) || 0);
                       const itemTotal = quantity * amount;
 
                       return (
                         <tr key={field.id}>
                           <td className="py-2">
+                            <select
+                              onChange={(e) => {
+                                const product = products.find(p => p.srNo === Number(e.target.value));
+                                handleProductSelect(index, product);
+                              }}
+                              className="w-full border-gray-300 rounded-md shadow-sm"
+                            >
+                              <optgroup label="Products">
+                                {products.map((product) => (
+                                  <option key={product.srNo} value={product.srNo}>
+                                    {product.title}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            </select>
+                          </td>
+                          <td className="py-2">
                             <input
                               {...register(`invoiceItems.${index}.description`)}
                               className="w-full border-0 focus:ring-0 p-0"
-                              placeholder="Item description"
+                              placeholder="Enter description"
                             />
                           </td>
                           <td className="py-2">
                             <input
                               type="number"
                               {...register(`invoiceItems.${index}.quantity`, {
-                                valueAsNumber: true,
-                                min: 0
+                                setValueAs: v => v === "" ? 0 : Number(v),
+                                onChange: (e) => {
+                                  const value = e.target.value;
+                                  if (value === "") {
+                                    setValue(`invoiceItems.${index}.quantity`, 0);
+                                  } else {
+                                    setValue(`invoiceItems.${index}.quantity`, Number(value));
+                                  }
+                                }
                               })}
                               className="w-full text-right border-0 focus:ring-0 p-0"
                               min="0"
                               step="1"
+                              placeholder="0"
                             />
                           </td>
                           <td className="py-2">
@@ -269,12 +332,20 @@ const Invoice = () => {
                               <input
                                 type="number"
                                 {...register(`invoiceItems.${index}.amount`, {
-                                  valueAsNumber: true,
-                                  min: 0
+                                  setValueAs: v => v === "" ? 0 : Number(v),
+                                  onChange: (e) => {
+                                    const value = e.target.value;
+                                    if (value === "") {
+                                      setValue(`invoiceItems.${index}.amount`, 0);
+                                    } else {
+                                      setValue(`invoiceItems.${index}.amount`, Number(value));
+                                    }
+                                  }
                                 })}
                                 className="w-24 text-right border-0 focus:ring-0 p-0"
                                 min="0"
                                 step="0.01"
+                                placeholder="0.00"
                               />
                             </div>
                           </td>
@@ -300,11 +371,108 @@ const Invoice = () => {
               </div>
             </div>
 
+            {/* Custom Items Section */}
+            <div className="mt-8">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium text-gray-900">Additional Items</h3>
+                <button
+                  type="button"
+                  onClick={() => appendCustom({ description: '', quantity: 1, amount: 0 })}
+                  className="text-blue-600 hover:text-blue-800 flex items-center"
+                >
+                  <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Item
+                </button>
+              </div>
+
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 font-medium">Description</th>
+                      <th className="text-right py-2 font-medium w-24">Quantity</th>
+                      <th className="text-right py-2 font-medium w-32">Price</th>
+                      <th className="text-right py-2 font-medium w-32">Amount</th>
+                      <th className="w-16"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {customFields.map((field, index) => {
+                      const quantity = Number(watch(`customItems.${index}.quantity`) || 0);
+                      const amount = Number(watch(`customItems.${index}.amount`) || 0);
+                      const itemTotal = quantity * amount;
+
+                      return (
+                        <tr key={field.id}>
+                          <td className="py-2">
+                            <input
+                              {...register(`customItems.${index}.description`)}
+                              className="w-full border-0 focus:ring-0 p-0"
+                              placeholder="Enter description"
+                            />
+                          </td>
+                          <td className="py-2">
+                            <input
+                              type="number"
+                              {...register(`customItems.${index}.quantity`)}
+                              className="w-full text-right border-0 focus:ring-0 p-0"
+                              min="0"
+                              step="1"
+                              placeholder="0"
+                            />
+                          </td>
+                          <td className="py-2">
+                            <div className="flex items-center justify-end">
+                              <span className="text-gray-500 mr-1">$</span>
+                              <input
+                                type="number"
+                                {...register(`customItems.${index}.amount`, {
+                                  setValueAs: v => v === "" ? 0 : Number(v),
+                                  onChange: (e) => {
+                                    const value = e.target.value;
+                                    if (value === "") {
+                                      setValue(`customItems.${index}.amount`, 0);
+                                    } else {
+                                      setValue(`customItems.${index}.amount`, Number(value));
+                                    }
+                                  }
+                                })}
+                                className="w-24 text-right border-0 focus:ring-0 p-0"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 text-right text-gray-700">
+                            ${itemTotal.toFixed(2)}
+                          </td>
+                          <td className="py-2 text-right">
+                            <button
+                              type="button"
+                              onClick={() => removeCustom(index)}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
             {/* Bank Details */}
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Bank Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+          <div>
                   <label className="text-sm text-gray-500">Bank Name:</label>
                   <input
                     {...register('bankDetails.bankName')}
@@ -347,8 +515,8 @@ const Invoice = () => {
                     />
                   </div>
                 ))}
-              </div>
-            </div>
+          </div>
+        </div>
 
             {/* Totals */}
             <div className="flex justify-end mt-6">
@@ -423,9 +591,9 @@ const Invoice = () => {
               <p className="text-gray-600">{watch('id')}</p>
             </div>
             <div className="text-right">
-              <h2 className="text-xl font-semibold">Your Company Name</h2>
-              <p className="text-gray-600">your@email.com</p>
-              <p className="text-gray-600">+1 234 567 890</p>
+              <h2 className="text-xl font-semibold">Gounders Samoa</h2>
+              <p className="text-gray-600">goundersamoa@gmail.com</p>
+              <p className="text-gray-600">+685 720 2696</p>
             </div>
           </div>
 
@@ -461,6 +629,7 @@ const Invoice = () => {
               </tr>
             </thead>
             <tbody>
+              {/* Product Items */}
               {fields.map((field, index) => {
                 const quantity = watch(`invoiceItems.${index}.quantity`) || 0;
                 const amount = watch(`invoiceItems.${index}.amount`) || 0;
@@ -469,6 +638,22 @@ const Invoice = () => {
                 return (
                   <tr key={field.id} className="border-b border-gray-200">
                     <td className="py-2">{watch(`invoiceItems.${index}.description`)}</td>
+                    <td className="py-2 text-right">{quantity}</td>
+                    <td className="py-2 text-right">${amount.toFixed(2)}</td>
+                    <td className="py-2 text-right">${itemTotal.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
+
+              {/* Custom Items */}
+              {customFields.map((field, index) => {
+                const quantity = watch(`customItems.${index}.quantity`) || 0;
+                const amount = watch(`customItems.${index}.amount`) || 0;
+                const itemTotal = quantity * amount;
+
+                return (
+                  <tr key={field.id} className="border-b border-gray-200">
+                    <td className="py-2">{watch(`customItems.${index}.description`)}</td>
                     <td className="py-2 text-right">{quantity}</td>
                     <td className="py-2 text-right">${amount.toFixed(2)}</td>
                     <td className="py-2 text-right">${itemTotal.toFixed(2)}</td>
@@ -504,7 +689,7 @@ const Invoice = () => {
                 </div>
               </div>
             </div>
-          </div>
+        </div>
 
           {/* Footer */}
           <div className="grid grid-cols-2 gap-8 text-sm border-t border-gray-300 pt-4">
