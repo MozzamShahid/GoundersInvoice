@@ -18,7 +18,7 @@ const StorageService = {
       
       const processedData = {
         ...invoiceData,
-        id: invoiceData.id || `INV-${Date.now()}`,
+        id: invoiceData.id || `QOA-${Date.now()}`,
         invoiceItems: invoiceData.invoiceItems.map(item => ({
           description: String(item.description || ''),
           quantity: Number(item.quantity) || 0,
@@ -66,7 +66,7 @@ const StorageService = {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const number = invoices.length + 1;
-    return `INV-${year}${month}-${String(number).padStart(3, '0')}`;
+    return `QOA-${year}${month}-${String(number).padStart(3, '0')}`;
   },
 };
 

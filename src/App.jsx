@@ -18,7 +18,7 @@ function App() {
             <Route path="/invoice/:id" element={<Invoice />} />
           </Routes>
         </main>
-        <Footer className="print:hidden" />
+        {/* <Footer className="print:hidden" /> */}
       </div>
     </Router>
   );

@@ -8,8 +8,8 @@ export const invoiceTemplates = {
       swiftCode: '',
     },
     terms: [
-      'Payment is due within 30 days',
-      'Please include invoice number on your payment',
+      'Quotation is Valid till next 12 Days',
+      // 'Please include invoice number on your payment',
       'Thank you for your business'
     ]
   },
@@ -22,8 +22,8 @@ export const invoiceTemplates = {
       swiftCode: '',
     },
     terms: [
-      'Payment is due within 30 days',
-      'Please include invoice number on your payment',
+      'Quotation is Valid till next 12 Days',
+      // 'Please include invoice number on your payment',
       'Thank you for your business'
     ]
   }

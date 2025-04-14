@@ -3,13 +3,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { invoiceTemplates } from '../data/invoiceTemplates';
 import StorageService from '../services/StorageService';
+import { motion } from 'framer-motion';
 import { loadProductsFromCSV } from '../utils/csvLoader';
-import Logo from '../assets/logo.png'
 
-const Invoice = () => {
+const OrignalInvoice = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  
   const existingInvoice = id ? StorageService.getInvoices().find(inv => inv.id === id) : null;
 
   const { register, handleSubmit, control, watch, setValue, formState: { isDirty, isSubmitting } } = useForm({
@@ -17,7 +17,7 @@ const Invoice = () => {
       id: StorageService.getNextInvoiceNumber(),
       invoiceItems: [{ description: '', quantity: 1, amount: 0, isCustomText: false }],
       customItems: [],
-      gstRate: 15,
+      gstRate: 10,
       discountRate: 0,
       status: 'draft',
       template: 'professional',
@@ -49,13 +49,13 @@ const Invoice = () => {
   const calculateTotals = () => {
     const invoiceItems = watch('invoiceItems') || [];
     const customItems = watch('customItems') || [];
-
+    
     const subtotal = [...invoiceItems, ...customItems].reduce((sum, item) => {
       const quantity = Number(item.quantity) || 0;
       const amount = Number(item.amount) || 0;
       return sum + (quantity * amount);
     }, 0);
-
+    
     const gst = (subtotal * gstRate) / 100;
     const discount = (subtotal * discountRate) / 100;
     const total = subtotal + gst - discount;
@@ -84,7 +84,7 @@ const Invoice = () => {
       setValue(`invoiceItems.${index}.amount`, '');
       return;
     }
-
+    
     // If product selected, fill in the product details
     setValue(`invoiceItems.${index}.description`, productData.title);
     setValue(`invoiceItems.${index}.quantity`, productData.qty);
@@ -147,8 +147,9 @@ const Invoice = () => {
                   type="button"
                   onClick={handleSubmit(onSubmit)}
                   disabled={isSubmitting}
-                  className={`bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                  className={`bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center ${
+                    isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
                   {isSubmitting ? (
                     <svg className="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -173,7 +174,7 @@ const Invoice = () => {
                   Print
                 </button>
               </div>
-            </div>
+          </div>
           </div>
         </div>
 
@@ -327,7 +328,7 @@ const Invoice = () => {
                           </td>
                           <td className="py-2">
                             <div className="flex items-center justify-end">
-                              <span className="text-gray-500 mr-1">WST</span>
+                              <span className="text-gray-500 mr-1">$</span>
                               <input
                                 type="number"
                                 {...register(`invoiceItems.${index}.amount`, {
@@ -349,7 +350,7 @@ const Invoice = () => {
                             </div>
                           </td>
                           <td className="py-2 text-right text-gray-700">
-                          WST {itemTotal.toFixed(2)}
+                            ${itemTotal.toFixed(2)}
                           </td>
                           <td className="py-2 text-right">
                             <button
@@ -424,7 +425,7 @@ const Invoice = () => {
                           </td>
                           <td className="py-2">
                             <div className="flex items-center justify-end">
-                              <span className="text-gray-500 mr-1">WST</span>
+                              <span className="text-gray-500 mr-1">$</span>
                               <input
                                 type="number"
                                 {...register(`customItems.${index}.amount`, {
@@ -446,7 +447,7 @@ const Invoice = () => {
                             </div>
                           </td>
                           <td className="py-2 text-right text-gray-700">
-                          WST {itemTotal.toFixed(2)}
+                            ${itemTotal.toFixed(2)}
                           </td>
                           <td className="py-2 text-right">
                             <button
@@ -468,10 +469,10 @@ const Invoice = () => {
             </div>
 
             {/* Bank Details */}
-            {/* <div>
+            <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Bank Details</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
+          <div>
                   <label className="text-sm text-gray-500">Bank Name:</label>
                   <input
                     {...register('bankDetails.bankName')}
@@ -500,13 +501,13 @@ const Invoice = () => {
                   />
                 </div>
               </div>
-            </div> */}
+            </div>
 
             {/* Terms */}
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-4">Terms & Conditions</h3>
               <div className="space-y-2">
-                {[0, 1].map((index) => (
+                {[0, 1, 2].map((index) => (
                   <div key={index}>
                     <input
                       {...register(`terms.${index}`)}
@@ -514,19 +515,19 @@ const Invoice = () => {
                     />
                   </div>
                 ))}
-              </div>
-            </div>
+          </div>
+        </div>
 
             {/* Totals */}
             <div className="flex justify-end mt-6">
               <div className="w-full max-w-xs space-y-3">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal:</span>
-                  <span className="font-medium">WST {subtotal.toFixed(2)}</span>
+                  <span className="font-medium">${subtotal.toFixed(2)}</span>
                 </div>
                 <div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-600">VAGST Rate:</span>
+                    <span className="text-gray-600">GST Rate:</span>
                     <div className="flex items-center">
                       <input
                         type="number"
@@ -543,8 +544,8 @@ const Invoice = () => {
                     </div>
                   </div>
                   <div className="flex justify-between mt-1 text-gray-600">
-                    <span>VAGST Amount:</span>
-                    <span>WST {gst.toFixed(2)}</span>
+                    <span>GST Amount:</span>
+                    <span>${gst.toFixed(2)}</span>
                   </div>
                 </div>
                 <div>
@@ -567,12 +568,12 @@ const Invoice = () => {
                   </div>
                   <div className="flex justify-between mt-1 text-gray-600">
                     <span>Discount Amount:</span>
-                    <span>-WST {discount.toFixed(2)}</span>
+                    <span>-${discount.toFixed(2)}</span>
                   </div>
                 </div>
                 <div className="flex justify-between pt-3 border-t border-gray-200">
                   <span className="font-bold">Total:</span>
-                  <span className="font-bold">WST {total.toFixed(2)}</span>
+                  <span className="font-bold">${total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -586,15 +587,12 @@ const Invoice = () => {
           {/* Header */}
           <div className="flex justify-between mb-8">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Quotation</h1>
+              <h1 className="text-2xl font-bold text-gray-900">INVOICE</h1>
               <p className="text-gray-600">{watch('id')}</p>
             </div>
-            <div className="flex flex-col items-end">
-              <img src={Logo} className='h-20 text-center' alt="Gounders Samoa Logo" />
+            <div className="text-right">
               <h2 className="text-xl font-semibold">Gounders Samoa</h2>
-              <h2 className="text-xl font-semibold">TIN: 107834</h2>
               <p className="text-gray-600">goundersamoa@gmail.com</p>
-              <p className="text-gray-600">www.goundersamoa.com</p>
               <p className="text-gray-600">+685 720 2696</p>
             </div>
           </div>
@@ -641,8 +639,8 @@ const Invoice = () => {
                   <tr key={field.id} className="border-b border-gray-200">
                     <td className="py-2">{watch(`invoiceItems.${index}.description`)}</td>
                     <td className="py-2 text-right">{quantity}</td>
-                    <td className="py-2 text-right">WST {amount.toFixed(2)}</td>
-                    <td className="py-2 text-right">WST {itemTotal.toFixed(2)}</td>
+                    <td className="py-2 text-right">${amount.toFixed(2)}</td>
+                    <td className="py-2 text-right">${itemTotal.toFixed(2)}</td>
                   </tr>
                 );
               })}
@@ -657,8 +655,8 @@ const Invoice = () => {
                   <tr key={field.id} className="border-b border-gray-200">
                     <td className="py-2">{watch(`customItems.${index}.description`)}</td>
                     <td className="py-2 text-right">{quantity}</td>
-                    <td className="py-2 text-right">WST {amount.toFixed(2)}</td>
-                    <td className="py-2 text-right">WST {itemTotal.toFixed(2)}</td>
+                    <td className="py-2 text-right">${amount.toFixed(2)}</td>
+                    <td className="py-2 text-right">${itemTotal.toFixed(2)}</td>
                   </tr>
                 );
               })}
@@ -671,36 +669,36 @@ const Invoice = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal:</span>
-                  <span>WST {subtotal.toFixed(2)}</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
                 {gst > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">VAGST ({gstRate}%):</span>
-                    <span>WST {gst.toFixed(2)}</span>
+                    <span className="text-gray-600">GST ({gstRate}%):</span>
+                    <span>${gst.toFixed(2)}</span>
                   </div>
                 )}
                 {discount > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Discount ({discountRate}%):</span>
-                    <span>-WST {discount.toFixed(2)}</span>
+                    <span>-${discount.toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex justify-between pt-2 border-t border-gray-300 font-bold">
                   <span>Total:</span>
-                  <span>WST {total.toFixed(2)}</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
-          </div>
+        </div>
 
           {/* Footer */}
           <div className="grid grid-cols-2 gap-8 text-sm border-t border-gray-300 pt-4">
-            {/* <div>
+            <div>
               <h4 className="font-medium mb-2">Payment Details:</h4>
               <p>Bank: {watch('bankDetails.bankName')}</p>
               <p>Account: {watch('bankDetails.accountNumber')}</p>
               <p>SWIFT: {watch('bankDetails.swiftCode')}</p>
-            </div> */}
+            </div>
             <div>
               <h4 className="font-medium mb-2">Terms & Conditions:</h4>
               <ul className="list-disc list-inside text-xs text-gray-600">
@@ -716,4 +714,4 @@ const Invoice = () => {
   );
 };
 
-export default Invoice;
+export default OrignalInvoice;
